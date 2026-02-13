@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus Tube</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- MediaPipe Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Focus Tube</h1>
+
+        <div class="controls">
+            <input type="text" id="video-url" placeholder="Enter YouTube URL (e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ)">
+            <button id="load-btn">Load Video</button>
+        </div>
+
+        <div class="video-wrapper">
+            <div id="player"></div>
+            <div id="warning-overlay" class="hidden">
+                <div class="warning-content">
+                    <h2>Are you still watching?</h2>
+                    <p>Please look at the screen to resume.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden video element for MediaPipe -->
+        <div class="webcam-container">
+            <video class="input_video" autoplay playsinline muted></video>
+            <canvas class="output_canvas" width="480px" height="360px"></canvas>
+        </div>
+
+        <div id="status">Status: Waiting for camera...</div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

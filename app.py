@@ -1,4 +1,4 @@
-from flask import Flask, request, abort # Import 'request'
+from flask import Flask, request, abort, render_template # Import 'request' and 'render_template'
 import requests as r
 import os
 
@@ -46,8 +46,8 @@ def telegram_proxy(api_path):
 
 # Your original root route:
 @app.route('/')
-def hello_worl():
-    return 'Hello, Render! This is my first simple Flask app.'
+def index():
+    return render_template('index.html')
 
 # Your original run code:
 if __name__ == '__main__':
