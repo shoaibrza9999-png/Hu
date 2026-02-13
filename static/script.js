@@ -24,7 +24,7 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 //    after the API code downloads.
 function onYouTubeIframeAPIReady() {
     isYoutubeReady = true;
-    console.log("YouTube API Ready");
+    // console.log("YouTube API Ready");
 
     player = new YT.Player('player', {
         height: '100%',
@@ -104,25 +104,17 @@ function updateStatus(msg) {
 // --- MediaPipe FaceMesh & Camera Integration ---
 
 function onResults(results) {
+  // We do not need to draw on the canvas for the final product,
+  // but we must process the landmarks.
+  // Keeping the drawImage for basic debugging feedback (seeing yourself is useful for setup),
+  // but removing the heavy mesh drawing.
+
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-
-  // Draw the video frame to the canvas
   canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
   if (results.multiFaceLandmarks) {
     for (const landmarks of results.multiFaceLandmarks) {
-      // Draw connectors and landmarks
-      drawConnectors(canvasCtx, landmarks, FACEMESH_TESSELATION,
-                     {color: '#C0C0C070', lineWidth: 1});
-      drawConnectors(canvasCtx, landmarks, FACEMESH_RIGHT_EYE, {color: '#FF3030'});
-      drawConnectors(canvasCtx, landmarks, FACEMESH_RIGHT_EYEBROW, {color: '#FF3030'});
-      drawConnectors(canvasCtx, landmarks, FACEMESH_LEFT_EYE, {color: '#30FF30'});
-      drawConnectors(canvasCtx, landmarks, FACEMESH_LEFT_EYEBROW, {color: '#30FF30'});
-      drawConnectors(canvasCtx, landmarks, FACEMESH_FACE_OVAL, {color: '#E0E0E0'});
-      drawConnectors(canvasCtx, landmarks, FACEMESH_LIPS, {color: '#E0E0E0'});
-
-      // Focus Logic Placeholder
       checkFocus(landmarks);
     }
   }
@@ -152,7 +144,7 @@ const camera = new Camera(videoElement, {
 
 camera.start()
   .then(() => {
-      console.log("Camera started successfully");
+      // console.log("Camera started successfully");
   })
   .catch((err) => {
       console.error("Error starting camera:", err);
@@ -226,7 +218,7 @@ function handleFocusState(instantFocusState) {
 }
 
 function onFocusGained() {
-    console.log("Focus GAINED");
+    // console.log("Focus GAINED");
     updateStatus("User is focused.");
     document.getElementById('status').style.color = "green";
 
@@ -240,7 +232,7 @@ function onFocusGained() {
 }
 
 function onFocusLost() {
-    console.log("Focus LOST");
+    // console.log("Focus LOST");
     updateStatus("User looked away!");
     document.getElementById('status').style.color = "red";
 
