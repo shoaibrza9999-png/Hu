@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Price Tracker</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Amazon Price Tracker</h1>
+
+        <div class="card">
+            <h2>Add New Item</h2>
+            <form id="addItemForm">
+                <div class="form-group">
+                    <label for="url">Amazon URL:</label>
+                    <input type="url" id="url" required placeholder="https://www.amazon.com/dp/B08N5N6NYS">
+                </div>
+                <div class="form-group">
+                    <label for="targetPrice">Target Price:</label>
+                    <input type="number" id="targetPrice" step="0.01" required placeholder="99.99">
+                </div>
+                <button type="submit">Track Item</button>
+            </form>
+            <div id="addStatus"></div>
+        </div>
+
+        <div class="card">
+            <h2>Tracked Items</h2>
+            <div class="table-container">
+                <table id="itemsTable">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Current Price</th>
+                            <th>Target Price</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsTableBody">
+                        <!-- Items will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Modal for Chart -->
+        <div id="chartModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2 id="modalTitle">Price History</h2>
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+</html>
