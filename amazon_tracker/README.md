@@ -21,25 +21,34 @@ A simple web application to track Amazon prices over time, utilizing Flask, SQLA
 
 ### Running the background tracker locally
 
-In a separate terminal, run:
+In a separate terminal, you can run the tracker manually via CLI:
 ```bash
 flask --app app run-tracker
 ```
-This will fetch the latest prices for all items in the database.
+Or you can trigger the webhook in your browser: `http://127.0.0.1:5000/api/cron/run-tracker?token=default-local-secret`
 
 ## Deploying to Render.com
 
-This repository includes a `render.yaml` file to deploy the entire stack (PostgreSQL database, Web Service, and Cron Job) seamlessly.
+This repository includes a `render.yaml` file to deploy the stack (PostgreSQL database and Web Service) seamlessly.
 
 1. Create an account on [Render.com](https://render.com/) and link your GitHub account.
 2. In the Render Dashboard, click "New" -> "Blueprint".
 3. Connect the repository containing this code.
 4. Render will automatically detect the `render.yaml` file.
-5. In the final step before creating the services, Render will ask you to supply the value for `SCRAPER_API_KEY`.
-   - Enter your ScraperAPI key (e.g., `1f57cfc93728601451afdc95e862d30e`).
-6. Click "Apply". Render will spin up:
-   - A free PostgreSQL database.
-   - A web service running the Flask application (using Gunicorn).
-   - A cron job that runs the tracker script (`flask --app app run-tracker`) every hour.
+5. Provide your `SCRAPER_API_KEY` when prompted. (Render will automatically generate a secure `CRON_SECRET` for you).
+6. Click "Apply".
 
-Once deployed, you can access your live web application via the `.onrender.com` URL provided in the dashboard.
+## Automating the Tracker (Free Tier Workaround)
+
+Render does not allow native Cron Jobs on the Free Tier. To automate the price tracking for free, we use a web-accessible webhook (`/api/cron/run-tracker`) secured by a secret token, and an external free cron service to ping it.
+
+1. Find your secret token: In the Render dashboard, click on your deployed Web Service (`amazon-tracker-web`), go to "Environment", and copy the value of `CRON_SECRET`.
+2. Find your app URL: Also in the Render dashboard, copy the public URL of your web service (e.g., `https://amazon-tracker-web.onrender.com`).
+3. Create a free account on [cron-job.org](https://cron-job.org/).
+4. Click "Create Cronjob".
+5. Set the URL to your webhook, passing the secret token as a query parameter. It should look exactly like this:
+   `https://YOUR_APP_NAME.onrender.com/api/cron/run-tracker?token=YOUR_CRON_SECRET_VALUE`
+6. Set the Execution schedule to "Every 1 hours" (or however often you want to track).
+7. Save the cronjob.
+
+Cron-job.org will now visit that hidden link automatically every hour. Your app will verify the secret token, query all saved items, and fetch their latest prices in the background.

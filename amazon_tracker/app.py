@@ -2,6 +2,49 @@ import os
 from flask import Flask, request, jsonify, render_template
 from models import db, Item, PriceHistory
 
+def run_tracker_logic():
+    from scraper import fetch_price
+    print("Starting tracker...")
+
+    items = Item.query.all()
+    results = []
+    for item in items:
+        print(f"Tracking: {item.title or item.url}")
+        try:
+            title, current_price = fetch_price(item.url)
+
+            if not item.title and title != "Unknown Title":
+                item.title = title
+                db.session.commit()
+
+            if current_price is not None:
+                print(f"  Current Price: {current_price} | Target: {item.target_price}")
+
+                history = PriceHistory(item_id=item.id, price=current_price)
+                db.session.add(history)
+                db.session.commit()
+
+                if current_price <= item.target_price:
+                    # For MVP, log it instead of actual email
+                    msg = f"ALERT: Price dropped! Send email to user. {item.title} is now {current_price}"
+                    print(f"  {msg}")
+                    results.append({"url": item.url, "status": "price_dropped", "message": msg})
+                else:
+                    results.append({"url": item.url, "status": "tracked", "price": current_price})
+            else:
+                msg = f"Failed to get price for {item.url}"
+                print(f"  {msg}")
+                results.append({"url": item.url, "status": "failed", "message": msg})
+
+        except Exception as e:
+            msg = f"Error processing {item.url}: {e}"
+            print(f"  {msg}")
+            db.session.rollback()
+            results.append({"url": item.url, "status": "error", "message": msg})
+
+    print("Tracker finished.")
+    return results
+
 def create_app():
     app = Flask(__name__)
 
@@ -68,40 +111,24 @@ def create_app():
             db.session.rollback()
             return jsonify({'error': str(e)}), 500
 
+    @app.route('/api/cron/run-tracker', methods=['GET'])
+    def trigger_tracker_webhook():
+        # A simple security check using a secret token so nobody can spam our scraper API limits
+        token = request.args.get('token')
+        expected_token = os.environ.get('CRON_SECRET', 'default-local-secret')
+
+        if not token or token != expected_token:
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        # Normally you'd want to run this asynchronously (e.g., Celery) to not block the web response
+        # or hit a timeout on Render. For an MVP with a few items, synchronous is acceptable.
+        results = run_tracker_logic()
+        return jsonify({'status': 'success', 'results': results}), 200
+
     @app.cli.command("run-tracker")
-    def run_tracker():
+    def run_tracker_cli():
         """Scrape latest prices for all tracked items."""
-        from scraper import fetch_price
-        print("Starting tracker...")
-
-        items = Item.query.all()
-        for item in items:
-            print(f"Tracking: {item.title or item.url}")
-            try:
-                title, current_price = fetch_price(item.url)
-
-                if not item.title and title != "Unknown Title":
-                    item.title = title
-                    db.session.commit()
-
-                if current_price is not None:
-                    print(f"  Current Price: {current_price} | Target: {item.target_price}")
-
-                    history = PriceHistory(item_id=item.id, price=current_price)
-                    db.session.add(history)
-                    db.session.commit()
-
-                    if current_price <= item.target_price:
-                        # For MVP, log it instead of actual email
-                        print(f"  ALERT: Price dropped! Send email to user. {item.title} is now {current_price}")
-                else:
-                    print(f"  Failed to get price for {item.url}")
-
-            except Exception as e:
-                print(f"  Error processing {item.url}: {e}")
-                db.session.rollback()
-
-        print("Tracker finished.")
+        run_tracker_logic()
 
     return app
 
